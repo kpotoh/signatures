@@ -7,4 +7,5 @@ matplotlib~=3.4.3
 seaborn~=0.11.2
 tqdm~=4.62.3
 biopython~=1.79
+SigProfilerAssignment~=0.0.7
 SigProfilerExtractor~=1.1.7

@@ -11,7 +11,7 @@
 - ~Read the [paper](https://www.biorxiv.org/content/10.1101/2020.12.13.422570v2.full) about SigProfilerExtractor~
 - ~Check 2. Run extraction on 2 mutspec datasets with different normalization component and compare results for normalized and not mutspecs. Signatures of normalized mutspecs must be more similar than for not normalized - result is obvious. Pass it~ - useless, proved by equations below
 - ~Look at another signature database [Signal](https://signal.mutationalsignatures.com/explore/mutagens), download it~
-- Filter databases, drop trash signatures
+- Filter databases, drop trash signatures (using signature_subgroups and simple filtration in Signal)
 - Write script to deconvolute on Signal database or custom databases
 
 
