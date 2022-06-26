@@ -1,4 +1,7 @@
+# USAGE: python3 count_codons.py HUMAN_GENOME OUT_COUNTS_JSON
+
 import json
+import os
 import sys
 from collections import defaultdict
 
@@ -15,9 +18,9 @@ def is_appropriate_codon(codon: str) -> bool:
     return len(set(codon).difference(NUCL_SET)) == 0
 
 
-def main():
+def main(path_th_genome, path_to_out):
     codon_counts = defaultdict(int)
-    fasta = SeqIO.parse(PATH_TO_GENOME, "fasta")
+    fasta = SeqIO.parse(path_th_genome, "fasta")
     rec: SeqRecord = None
     for rec in fasta:
         print("Processing...", rec.description, file=sys.stderr)
@@ -29,9 +32,13 @@ def main():
                 codon_counts[codon] += 1
 
     print(codon_counts, file=sys.stderr)
-    with open(PATH_TO_JSON_OUT, "w") as fout:
+    with open(path_to_out, "w") as fout:
         json.dump(codon_counts, fout)
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) < 2:
+        raise ValueError("Pass 2 arguments: HUMAN_GENOME and OUT_COUNTS_JSON")
+    if not os.path.exists(sys.argv[1]):
+        raise ValueError(f"Path ({sys.argv[1]}) doesn't exist")
+    main(sys.argv[1], sys.argv[2])

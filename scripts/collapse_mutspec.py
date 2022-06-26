@@ -1,8 +1,6 @@
 import json
 import os
-import random
 from collections import defaultdict
-from functools import partial, reduce
 
 import click
 import numpy as np
@@ -61,26 +59,25 @@ def reformat_mut_style(nuc_subst: str):
 
 def collapse_mutspec(mutspec192: pd.DataFrame):
     assert mutspec192.shape[0] == 192, "Not all mutations in mutspec!!!"
-    if mutspec192["NucSubst"].str.contains("^\w{3}>\w{3}$").sum() == 192:
-        # collapsing: AGG>ATG -> A[G>T]G -> C[C>A]T
-        mutspec192["Mutation Types"] = mutspec192.NucSubst.apply(reformat_mut_style)
-        mutspec192.drop("NucSubst", axis=1, inplace=True)
-        mutspec96 = mutspec192.groupby("Mutation Types").sum().reset_index()
-    else:
+    if mutspec192["NucSubst"].str.contains("^\w{3}>\w{3}$").sum() != 192:
         raise NotImplementedError("Such MutSpec type is not allovable")
 
-    cols = ["Mutation Types"] + list(mutspec96.columns.drop("Mutation Types"))
-    mutspec96 = mutspec96[cols]
+    # collapsing: AGG>ATG -> A[G>T]G -> C[C>A]T
+    mutspec192["Mutation Types"] = mutspec192.NucSubst.apply(reformat_mut_style)
+    mutspec192.drop("NucSubst", axis=1, inplace=True)
+    mutspec96 = mutspec192.groupby("Mutation Types").sum().reset_index()
+    # cols = ["Mutation Types"] + list(mutspec96.columns.drop("Mutation Types"))
+    # mutspec96 = mutspec96[cols]
     return mutspec96
 
 
-def renormalize(mutspec, inplace=False, scale=True):
+def renormalize(mutspec, inplace=False, scale=True, trinucleotides=PATH_TO_HUMAN_COUNTS):
     if not inplace:
         mutspec = mutspec.copy()
     mutspec["Context"] = mutspec["Mutation Types"].str.extract(
         "(\w)\[(\w)>\w\](\w)").apply(lambda x: "".join(x), axis=1)
 
-    human_triplet_counts = load_triplet_counts(PATH_TO_HUMAN_COUNTS, True)
+    human_triplet_counts = load_triplet_counts(trinucleotides, True)
     triplet_freqs = human_triplet_counts.reset_index(name="Freq")\
         .rename({"index": "Context"}, axis=1)
     ext_mutspec = pd.merge(mutspec, triplet_freqs, on="Context")\
@@ -104,13 +101,14 @@ def write_mutspec(data: pd.DataFrame, path):
 
 
 @click.command("converter", help="Convert 192-component mutational spectra to 96-component format")
-@click.argument("mutspec_path", required=True, type=click.Path(True))
+@click.option("--inp", required=True, type=click.Path(True), help="path to input mutspec192-sample table (csv)")
 @click.option("--out",  required=True, type=click.Path(), help="path to output mutspec96-sample table (tsv)")
 @click.option("--scale/--no-scale", default=True, show_default=True, help="Divide by minimal value in sample mutspec or not")
-def main(mutspec_path, out, scale):
+@click.option("-t", "--trinucleotides",  required=False, type=click.Path(True), default=PATH_TO_HUMAN_COUNTS, show_default=True, help="path to human genome trinucleotides counts (json)")
+def main(mutspec_path, out, scale, trinucleotides):
     mutspec192 = pd.read_csv(mutspec_path)
     mutspec96 = collapse_mutspec(mutspec192)
-    mutspec96human = renormalize(mutspec96, scale=scale)
+    mutspec96human = renormalize(mutspec96, scale=scale, trinucleotides=trinucleotides)
     write_mutspec(mutspec96human, out)
 
 
