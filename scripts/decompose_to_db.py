@@ -5,7 +5,8 @@ samples     = "data/sars-cov-2_96.tsv"
 output      = "data/output_example/decomp"
 sigs = None
 # sigs        = "COSMIC_v3_SBS_GRCh37_noSBS84-85.txt" #  Custom Signature Database
-
+# TODO add custom db without sbs5 and other trash signatures
+# and drop plus and minus strands from sars mutspec sample, maybe add samples from tree
 
 # for sars-cov-2
 signature_subgroups = [
